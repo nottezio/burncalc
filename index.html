@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BurnCalc — Kalkulator Parkland</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0c1117;color:#e8dcc8;font-family:'Outfit',sans-serif;min-height:100vh}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+input[type=time]{color-scheme:dark}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0c1117}
+::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:99px}
+
+.app{padding:1.5rem 1rem 3rem;max-width:960px;margin:0 auto}
+
+/* HEADER */
+header{text-align:center;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #1e3a5f}
+.logo{font-size:2.2rem;margin-bottom:.5rem}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,6vw,2.8rem);font-weight:700;color:#d4af6a;letter-spacing:.06em;line-height:1;margin-bottom:.4rem}
+.subtitle{font-size:.7rem;color:#6b7e96;letter-spacing:.2em;text-transform:uppercase}
+
+/* LAYOUT */
+.main-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,390px),1fr));gap:1.5rem}
+
+/* CARDS */
+.card{background:#111827;border:1px solid #1e3a5f;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.card:last-child{margin-bottom:0}
+.card-hdr{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid #1e3a5f}
+.card-title{font-size:.68rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#6b7e96}
+
+/* FIELDS */
+.field{margin-bottom:1rem}
+.field:last-child{margin-bottom:0}
+.lbl{display:block;font-size:.7rem;font-weight:500;color:#6b7e96;margin-bottom:.4rem;letter-spacing:.08em;text-transform:uppercase}
+.lbl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem}
+.lbl-inline{font-size:.7rem;font-weight:500;color:#6b7e96;letter-spacing:.08em;text-transform:uppercase}
+input[type=number],input[type=time]{width:100%;background:#0c1117;border:1px solid #1e3a5f;border-radius:8px;padding:.65rem .9rem;color:#e8dcc8;font-family:'JetBrains Mono',monospace;font-size:1rem;outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus{border-color:#d4af6a;box-shadow:0 0 0 2px rgba(212,175,106,.12)}
+input::placeholder{color:#6b7e96;opacity:.6}
+.unit{font-size:.68rem;color:#6b7e96;margin-top:.3rem}
+
+/* MULTIPLIER */
+.mult-grp{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:.4rem}
+.mbtn{padding:.7rem;border-radius:8px;border:1px solid #1e3a5f;background:transparent;color:#6b7e96;font-family:'JetBrains Mono',monospace;font-size:.95rem;cursor:pointer;transition:all .2s;text-align:center}
+.mbtn.on{background:#d4af6a;border-color:#d4af6a;color:#0c1117;font-weight:600}
+.mbtn:not(.on):hover{border-color:#7a6035;color:#e8dcc8}
+
+/* RON BUTTON */
+.ron-btn{background:transparent;border:1px solid #1e3a5f;border-radius:8px;color:#6b7e96;font-family:'Outfit',sans-serif;font-size:.68rem;padding:.3rem .6rem;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.3rem}
+.ron-btn:hover{border-color:#d4af6a;color:#d4af6a}
+
+/* TIME GRID */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+
+/* ALERTS */
+.awarn{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.28);border-radius:8px;padding:.65rem .9rem;font-size:.76rem;color:#fbbf24;margin-bottom:.5rem;line-height:1.6}
+.aerr{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:.65rem .9rem;font-size:.76rem;color:#f87171;margin-bottom:.5rem;line-height:1.6}
+
+/* PLACEHOLDER */
+.ph{background:#111827;border:1px solid #1e3a5f;border-radius:12px;padding:1.25rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:.9rem;text-align:center;color:#6b7e96;font-size:.82rem;line-height:1.7}
+
+/* RESULTS */
+.r-total{background:linear-gradient(135deg,#162032 0%,#0f1923 100%);border:1px solid #7a6035;border-radius:12px;padding:1.25rem 1.25rem 1rem;text-align:center;margin-bottom:.75rem}
+.r-total-lbl{font-size:.66rem;color:#6b7e96;letter-spacing:.16em;text-transform:uppercase;margin-bottom:.55rem}
+.r-total-val{font-family:'JetBrains Mono',monospace;font-size:clamp(2rem,5vw,2.7rem);font-weight:500;color:#d4af6a;line-height:1}
+.r-total-lit{font-family:'JetBrains Mono',monospace;font-size:1.05rem;color:#d4af6a;opacity:.55;margin-top:.3rem}
+.r-div{height:1px;background:#1e3a5f;margin:.65rem 0}
+.r-fml{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#6b7e96}
+
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+.sc{background:#0c1117;border:1px solid #1e3a5f;border-radius:10px;padding:1rem}
+.sc.s1{border-top:2px solid #d4af6a}
+.sc.s2{border-top:2px solid #60a5fa}
+.sc-lbl{font-size:.62rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;margin-bottom:.5rem}
+.sc-lbl.s1{color:#d4af6a}
+.sc-lbl.s2{color:#60a5fa}
+.sc-vol{font-family:'JetBrains Mono',monospace;font-size:1.35rem;color:#e8dcc8;font-weight:500}
+.sc-vol span{font-size:.62em;color:#6b7e96;margin-left:.25rem}
+.sc-rate{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:500;margin-top:.3rem}
+.sc-note{font-size:.64rem;color:#6b7e96;margin-top:.25rem;line-height:1.5}
+.rn{color:#34d399}.rw{color:#fbbf24}.rd{color:#f87171}
+
+/* RATE LEGEND */
+.r-leg{display:flex;gap:.65rem;margin-bottom:.75rem;font-size:.63rem;color:#6b7e96;flex-wrap:wrap}
+.rdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:.3rem;flex-shrink:0;vertical-align:middle}
+
+/* TIME BAR */
+.tbar{background:#0c1117;border:1px solid #1e3a5f;border-radius:10px;padding:.85rem;margin-bottom:.75rem}
+.tbar-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem}
+.tbar-lbl{font-size:.63rem;color:#6b7e96;letter-spacing:.1em;text-transform:uppercase}
+.tbar-st{font-family:'JetBrains Mono',monospace;font-size:.63rem;font-weight:500}
+.ttrack{background:#162032;border-radius:999px;height:9px;overflow:hidden;margin-bottom:.4rem}
+.tfill{height:100%;border-radius:999px;transition:width .6s ease}
+.tticks{display:flex;justify-content:space-between;font-size:.6rem;color:#6b7e96}
+
+/* FORMULA BOX */
+.fbox{background:rgba(255,255,255,.025);border:1px solid #1e3a5f;border-radius:8px;padding:.85rem}
+.fbox-lbl{font-size:.62rem;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:#d4af6a;margin-bottom:.45rem}
+.flines{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:#6b7e96;line-height:1.9}
+
+/* CLINICAL NOTE */
+.cn{background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:10px;padding:1rem 1.25rem;margin-top:1.5rem}
+.cn-lbl{font-size:.64rem;color:#60a5fa;letter-spacing:.15em;text-transform:uppercase;font-weight:600;margin-bottom:.5rem}
+.cn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.5rem 2rem}
+.cn-item{font-size:.78rem;color:#8b9ab0;line-height:1.75}
+
+/* DISCLAIMER */
+.disc{text-align:center;font-size:.64rem;color:#6b7e96;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #1e3a5f;line-height:1.8}
+
+/* MODAL */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);align-items:center;justify-content:center;z-index:999;padding:1rem}
+.moverlay.open{display:flex}
+.modal{background:#111827;border:1px solid #1e3a5f;border-radius:16px;padding:1.5rem;max-width:540px;width:100%;max-height:90vh;overflow-y:auto}
+.m-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
+.m-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:#d4af6a;font-weight:700}
+.m-sub{font-size:.68rem;color:#6b7e96;margin-top:.2rem}
+.m-close{background:transparent;border:1px solid #1e3a5f;color:#6b7e96;border-radius:8px;padding:.35rem .7rem;cursor:pointer;font-size:.72rem;font-family:'Outfit',sans-serif;transition:all .2s;white-space:nowrap;margin-left:1rem}
+.m-close:hover{border-color:#d4af6a;color:#d4af6a}
+
+/* TABS */
+.tabs{display:flex;gap:.5rem;margin-bottom:1.25rem;background:#0c1117;border-radius:10px;padding:.3rem}
+.tbtn{flex:1;padding:.5rem;border-radius:7px;border:none;background:transparent;color:#6b7e96;font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;transition:all .2s;font-weight:500}
+.tbtn.on{background:#111827;color:#d4af6a;border:1px solid #1e3a5f}
+.tcnt{display:none}
+.tcnt.on{display:block}
+
+/* DIAGRAM AREA */
+.dg-wrap{display:flex;align-items:flex-start;justify-content:center;gap:4px;background:#0c1117;border-radius:10px;padding:.75rem .5rem;overflow-x:auto;margin-bottom:1rem}
+.dg-col{flex:1;min-width:140px;max-width:180px}
+.dg-sep{display:flex;align-items:center;justify-content:center;padding:0 2px;padding-top:60px}
+.dg-sep-line{width:1px;height:200px;background:#1e3a5f}
+
+/* TOTALS STRIP */
+.tot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.45rem;margin-bottom:1rem;font-size:.72rem;text-align:center}
+.tot-cell{background:#0c1117;border:1px solid #1e3a5f;border-radius:8px;padding:.45rem .3rem}
+.tot-cell.hi{border-color:rgba(212,175,106,.4);border-width:1.5px}
+.tot-lbl{font-size:.56rem;color:#6b7e96;text-transform:uppercase;margin-bottom:.18rem;line-height:1.2}
+.tot-val{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.85rem}
+.tot-sub{font-size:.56rem;color:#6b7e96;margin-top:.1rem}
+.tot-cell.span2{grid-column:span 2}
+.tot-cell.accent{background:rgba(212,175,106,.08);border-color:rgba(212,175,106,.3)}
+
+/* RON TABLE */
+.rtbl{width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:1rem}
+.rtbl th{background:#0c1117;color:#d4af6a;font-weight:600;padding:.48rem .65rem;text-align:left;font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid #1e3a5f}
+.rtbl th:not(:first-child){text-align:center}
+.rtbl td{padding:.44rem .65rem;border-bottom:1px solid rgba(30,58,95,.4);color:#e8dcc8}
+.rtbl td:not(:first-child){text-align:center;font-family:'JetBrains Mono',monospace;font-weight:600}
+.rtbl .tr{background:rgba(212,175,106,.06)}
+.rtbl .tr td{color:#d4af6a;font-weight:600;border-bottom:none}
+.rtbl .hl{background:rgba(167,139,250,.06)}
+.rtbl tr:nth-child(even):not(.tr):not(.hl) td{background:rgba(255,255,255,.02)}
+.rtbl .diff-up{color:#fbbf24;font-size:.72rem}
+.rtbl .diff-eq{color:#6b7e96;font-size:.72rem}
+.rtbl .diff-dn{color:#fbbf24;font-size:.72rem}
+
+/* NOTE BOX */
+.nbox{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.22);border-radius:8px;padding:.8rem;font-size:.73rem;color:#fbbf24;line-height:1.65}
+.nbox ul{margin-top:.35rem;padding-left:1.1rem;display:flex;flex-direction:column;gap:.25rem}
+.ibox{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.2);border-radius:8px;padding:.65rem .9rem;font-size:.74rem;color:#60a5fa;margin-bottom:1rem;line-height:1.6}
+
+/* ANIM */
+@keyframes bfade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:bfade .35s ease forwards}
+
+/* RESPONSIVE */
+@media(max-width:420px){
+  .split-grid,.tgrid{grid-template-columns:1fr}
+  .r-leg{flex-direction:column;gap:.4rem}
+  .tot-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">🔥</div>
+  <h1>BurnCalc</h1>
+  <p class="subtitle">Kalkulator Resusitasi Cairan Luka Bakar &mdash; Formula Parkland</p>
+</header>
+
+<!-- ── MAIN GRID ── -->
+<div class="main-grid">
+
+  <!-- INPUTS -->
+  <div>
+    <div class="card">
+      <div class="card-hdr"><span>👤</span><span class="card-title">Data Pasien</span></div>
+
+      <div class="field">
+        <label class="lbl" for="wt">Berat Badan</label>
+        <input type="number" id="wt" placeholder="Contoh: 70" min="1" max="350" oninput="upd()">
+        <p class="unit">kilogram (kg)</p>
+      </div>
+
+      <div class="field">
+        <div class="lbl-row">
+          <span class="lbl-inline">% TBSA Terbakar</span>
+          <button class="ron-btn" onclick="openM()">📐 Rule of Nines</button>
+        </div>
+        <input type="number" id="tbsa" placeholder="Contoh: 30" min="0" max="100" oninput="upd()" style="margin-top:.4rem">
+        <p class="unit">% Total Body Surface Area — hanya luka derajat II &amp; III</p>
+      </div>
+
+      <div class="field">
+        <label class="lbl">Konstanta Cairan (mL/kg/%TBSA)</label>
+        <div class="mult-grp">
+          <button class="mbtn on"  onclick="setM(4,this)">4 mL</button>
+          <button class="mbtn"     onclick="setM(3,this)">3 mL</button>
+          <button class="mbtn"     onclick="setM(2,this)">2 mL</button>
+        </div>
+        <p id="mg" class="unit">Parkland klasik (ABA / ATLS — standar dewasa, luka bakar termal)</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><span>⏱️</span><span class="card-title">Waktu Resusitasi</span></div>
+      <div class="tgrid">
+        <div class="field">
+          <label class="lbl" for="inj">Waktu Cedera</label>
+          <input type="time" id="inj" oninput="upd()">
+        </div>
+        <div class="field">
+          <label class="lbl" for="ivt">Waktu Akses IV</label>
+          <input type="time" id="ivt" oninput="upd()">
+        </div>
+      </div>
+      <div style="background:rgba(212,175,106,.06);border:1px solid rgba(212,175,106,.15);border-radius:8px;padding:.65rem .85rem;font-size:.71rem;color:#6b7e96;line-height:1.6">
+        ℹ️ 50% cairan pertama dihitung dari <strong style="color:#e8dcc8">waktu cedera</strong>, bukan akses IV. Keterlambatan meningkatkan laju infus yang diperlukan.
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="rcol">
+    <div class="ph">
+      <div style="font-size:2.8rem;opacity:.3">💧</div>
+      <p>Masukkan <strong style="color:#e8dcc8">berat badan</strong> dan <strong style="color:#e8dcc8">persentase TBSA</strong> untuk memulai kalkulasi resusitasi</p>
+    </div>
+  </div>
+</div>
+
+<!-- CLINICAL NOTE -->
+<div class="cn">
+  <p class="cn-lbl">💊 Panduan Klinis</p>
+  <div class="cn-grid">
+    <p class="cn-item"><strong style="color:#e8dcc8">Pilihan Cairan:</strong> <strong style="color:#34d399">Ringer Laktat (Lactated Ringer's)</strong> — kristaloid pilihan utama. Hindari NaCl 0.9% tunggal (risiko asidosis hiperkloremik).</p>
+    <p class="cn-item"><strong style="color:#e8dcc8">Target UO:</strong> <strong style="color:#34d399">0.5–1 mL/kg/jam</strong> dewasa &bull; <strong style="color:#34d399">1 mL/kg/jam</strong> anak &lt;30 kg. Gunakan sebagai panduan titrasi utama.</p>
+    <p class="cn-item"><strong style="color:#e8dcc8">Perhatian:</strong> Rumus Parkland adalah estimasi awal — titrasi berdasarkan respons hemodinamik, laktat, dan diuresis aktual.</p>
+  </div>
+</div>
+
+<p class="disc">
+  Alat bantu kalkulasi klinis — bukan pengganti penilaian medis komprehensif.<br>
+  Keputusan terapi harus dilakukan oleh tenaga medis berlisensi berdasarkan kondisi klinis pasien secara menyeluruh.<br>
+  <span style="opacity:.65">Referensi: ABA Clinical Practice Guidelines 2023 &bull; ATLS 10th Ed. &bull; European Burns Association Guidelines</span>
+</p>
+</div>
+
+<!-- ═══════════════════════ MODAL ═══════════════════════ -->
+<div id="modal" class="moverlay" onclick="if(event.target===this)closeM()">
+<div class="modal">
+  <div class="m-hdr">
+    <div>
+      <div class="m-title">Rule of Nines</div>
+      <div class="m-sub">Estimasi % TBSA — Anterior &amp; Posterior</div>
+    </div>
+    <button class="m-close" onclick="closeM()">✕ Tutup</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tbtn on" onclick="swTab('adult',this)">👨 Dewasa</button>
+    <button class="tbtn"    onclick="swTab('child',this)">👶 Anak</button>
+  </div>
+
+  <!-- ══════════════ ADULT TAB ══════════════ -->
+  <div id="t-adult" class="tcnt on">
+
+    <!-- ADULT DIAGRAM PAIR -->
+    <div class="dg-wrap">
+
+      <!-- ANTERIOR ADULT -->
+      <div class="dg-col">
+        <svg viewBox="0 0 165 305" style="width:100%;display:block" role="img" aria-label="Tubuh dewasa tampak anterior dengan persentase TBSA">
+          <!-- Label -->
+          <text x="82.5" y="13" text-anchor="middle" fill="#6b7e96" font-size="8.5" font-family="Outfit,sans-serif" font-weight="600" letter-spacing="1.5">DEPAN / ANTERIOR</text>
+
+          <!-- HEAD: 9% total -->
+          <ellipse cx="82.5" cy="39" rx="21" ry="22" fill="#1a2c40" stroke="#d4af6a" stroke-width="1.8"/>
+          <text x="82.5" y="42" text-anchor="middle" fill="#d4af6a" font-size="10" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82.5" y="52" text-anchor="middle" fill="#d4af6a" font-size="6.5" font-family="Outfit,sans-serif" opacity=".7">kepala&amp;leher</text>
+
+          <!-- NECK -->
+          <rect x="75" y="61" width="15" height="8" rx="2" fill="#1a2c40" stroke="#d4af6a" stroke-width="1"/>
+
+          <!-- LEFT ARM anterior 4.5% -->
+          <rect x="16" y="69" width="27" height="84" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="29.5" y="109" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- RIGHT ARM anterior 4.5% -->
+          <rect x="122" y="69" width="27" height="84" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="135.5" y="109" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- CHEST ant 9% -->
+          <rect x="45" y="69" width="74" height="44" rx="3" fill="#0d2035" stroke="#60a5fa" stroke-width="1.5"/>
+          <text x="82" y="93" text-anchor="middle" fill="#60a5fa" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82" y="104" text-anchor="middle" fill="#60a5fa" font-size="6" font-family="Outfit,sans-serif" opacity=".7">dada anterior</text>
+
+          <!-- ABDOMEN ant 9% -->
+          <rect x="45" y="113" width="74" height="44" rx="3" fill="#0d2035" stroke="#60a5fa" stroke-width="1.5"/>
+          <text x="82" y="137" text-anchor="middle" fill="#60a5fa" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82" y="148" text-anchor="middle" fill="#60a5fa" font-size="6" font-family="Outfit,sans-serif" opacity=".7">abdomen anterior</text>
+
+          <!-- PERINEUM 1% -->
+          <text x="82.5" y="168" text-anchor="middle" fill="#fb923c" font-size="8" font-family="JetBrains Mono,monospace">1% ♦</text>
+
+          <!-- LEFT THIGH ant 4.5% -->
+          <rect x="45" y="171" width="33" height="52" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="61.5" y="200" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+          <!-- RIGHT THIGH ant 4.5% -->
+          <rect x="87" y="171" width="33" height="52" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="103.5" y="200" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- LEFT LOWER LEG ant 4.5% -->
+          <rect x="45" y="225" width="33" height="58" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="61.5" y="257" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+          <!-- RIGHT LOWER LEG ant 4.5% -->
+          <rect x="87" y="225" width="33" height="58" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="103.5" y="257" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- Bracket: left leg total = 9% anterior -->
+          <line x1="140" y1="171" x2="146" y2="171" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="146" y1="171" x2="146" y2="283" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="140" y1="283" x2="146" y2="283" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <text x="154" y="218" text-anchor="middle" fill="#a78bfa" font-size="7.5" font-family="JetBrains Mono,monospace" writing-mode="vertical-rl" transform="translate(148,227) rotate(-90)">9% ant.</text>
+
+          <!-- Thigh / LL separator hint -->
+          <line x1="45" y1="223" x2="120" y2="223" stroke="#a78bfa" stroke-width=".5" stroke-dasharray="3,3" opacity=".4"/>
+          <text x="135" y="175" text-anchor="middle" fill="#a78bfa" font-size="6" font-family="Outfit,sans-serif" opacity=".6">paha</text>
+          <text x="135" y="229" text-anchor="middle" fill="#a78bfa" font-size="6" font-family="Outfit,sans-serif" opacity=".6">t.bawah</text>
+        </svg>
+      </div>
+
+      <div class="dg-sep"><div class="dg-sep-line"></div></div>
+
+      <!-- POSTERIOR ADULT -->
+      <div class="dg-col">
+        <svg viewBox="0 0 165 305" style="width:100%;display:block" role="img" aria-label="Tubuh dewasa tampak posterior dengan persentase TBSA">
+          <text x="82.5" y="13" text-anchor="middle" fill="#6b7e96" font-size="8.5" font-family="Outfit,sans-serif" font-weight="600" letter-spacing="1.5">BELAKANG / POSTERIOR</text>
+
+          <!-- HEAD BACK: dashed = already counted -->
+          <ellipse cx="82.5" cy="39" rx="21" ry="22" fill="#131e2c" stroke="#7a6035" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="82.5" y="42" text-anchor="middle" fill="#7a6035" font-size="8.5" font-family="JetBrains Mono,monospace">(9%)*</text>
+          <text x="82.5" y="52" text-anchor="middle" fill="#7a6035" font-size="5.5" font-family="Outfit,sans-serif" opacity=".7">sudah dihitung</text>
+
+          <!-- NECK BACK -->
+          <rect x="75" y="61" width="15" height="8" rx="2" fill="#131e2c" stroke="#7a6035" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <!-- LEFT ARM posterior 4.5% -->
+          <rect x="16" y="69" width="27" height="84" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="29.5" y="109" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- RIGHT ARM posterior 4.5% -->
+          <rect x="122" y="69" width="27" height="84" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="135.5" y="109" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- UPPER BACK 9% -->
+          <rect x="45" y="69" width="74" height="44" rx="3" fill="#0c1e35" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="82" y="93" text-anchor="middle" fill="#38bdf8" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82" y="104" text-anchor="middle" fill="#38bdf8" font-size="6" font-family="Outfit,sans-serif" opacity=".7">punggung atas</text>
+
+          <!-- LOWER BACK 9% -->
+          <rect x="45" y="113" width="74" height="44" rx="3" fill="#0c1e35" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="82" y="137" text-anchor="middle" fill="#38bdf8" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82" y="148" text-anchor="middle" fill="#38bdf8" font-size="6" font-family="Outfit,sans-serif" opacity=".7">punggung bawah</text>
+
+          <!-- NO PERINEUM POSTERIOR — spacer -->
+
+          <!-- LEFT THIGH post 4.5% -->
+          <rect x="45" y="171" width="33" height="52" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="61.5" y="200" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+          <!-- RIGHT THIGH post 4.5% -->
+          <rect x="87" y="171" width="33" height="52" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="103.5" y="200" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- LEFT LOWER LEG post 4.5% -->
+          <rect x="45" y="225" width="33" height="58" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="61.5" y="257" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+          <!-- RIGHT LOWER LEG post 4.5% -->
+          <rect x="87" y="225" width="33" height="58" rx="3" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.5"/>
+          <text x="103.5" y="257" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- Bracket: right leg total = 9% posterior -->
+          <line x1="140" y1="171" x2="146" y2="171" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="146" y1="171" x2="146" y2="283" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="140" y1="283" x2="146" y2="283" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <text x="154" y="218" text-anchor="middle" fill="#a78bfa" font-size="7.5" font-family="JetBrains Mono,monospace" writing-mode="vertical-rl" transform="translate(148,227) rotate(-90)">9% post.</text>
+
+          <!-- Thigh/LL separator hint -->
+          <line x1="45" y1="223" x2="120" y2="223" stroke="#a78bfa" stroke-width=".5" stroke-dasharray="3,3" opacity=".4"/>
+
+          <!-- Footnote -->
+          <text x="82.5" y="297" text-anchor="middle" fill="#6b7e96" font-size="6.5" font-family="Outfit,sans-serif">*kepala dihitung 1× dari anterior</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- KEY: 9+9=18 annotation -->
+    <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:8px;padding:.6rem .9rem;margin-bottom:1rem;font-size:.74rem;color:#a78bfa;text-align:center;line-height:1.7">
+      <strong>Tiap tungkai = 9% anterior + 9% posterior = 18% total</strong><br>
+      <span style="font-size:.68rem;opacity:.8">(Paha ant 4.5% + Paha post 4.5% = 9%) + (T.bawah ant 4.5% + T.bawah post 4.5% = 9%) = <strong>18%</strong></span>
+    </div>
+
+    <!-- ADULT TOTALS GRID -->
+    <p style="font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#d4af6a;margin-bottom:.55rem">Ringkasan Total — Dewasa</p>
+    <div class="tot-grid" style="margin-bottom:1rem">
+      <div class="tot-cell hi">
+        <div class="tot-lbl">Kepala &amp; Leher</div>
+        <div class="tot-val" style="color:#d4af6a">9%</div>
+        <div class="tot-sub">4.5+4.5</div>
+      </div>
+      <div class="tot-cell">
+        <div class="tot-lbl">Tiap Lengan</div>
+        <div class="tot-val" style="color:#34d399">9%</div>
+        <div class="tot-sub">4.5+4.5</div>
+      </div>
+      <div class="tot-cell">
+        <div class="tot-lbl">Trunk Anterior</div>
+        <div class="tot-val" style="color:#60a5fa">18%</div>
+        <div class="tot-sub">9+9</div>
+      </div>
+      <div class="tot-cell">
+        <div class="tot-lbl">Trunk Posterior</div>
+        <div class="tot-val" style="color:#38bdf8">18%</div>
+        <div class="tot-sub">9+9</div>
+      </div>
+      <div class="tot-cell span2 hi" style="border-color:rgba(167,139,250,.4)">
+        <div class="tot-lbl">Tiap Tungkai (Ant + Post)</div>
+        <div class="tot-val" style="color:#a78bfa;font-size:1rem">18%</div>
+        <div class="tot-sub" style="color:#a78bfa;opacity:.9">Paha 9% (4.5+4.5) + T.bawah 9% (4.5+4.5)</div>
+      </div>
+      <div class="tot-cell" style="border-color:rgba(251,146,60,.3)">
+        <div class="tot-lbl">Genitalia</div>
+        <div class="tot-val" style="color:#fb923c">1%</div>
+      </div>
+      <div class="tot-cell accent">
+        <div class="tot-lbl">TOTAL</div>
+        <div class="tot-val" style="color:#d4af6a">100%</div>
+      </div>
+    </div>
+
+    <!-- ADULT TABLE -->
+    <table class="rtbl">
+      <thead>
+        <tr>
+          <th>Area Tubuh</th>
+          <th style="color:#60a5fa">Ant.</th>
+          <th style="color:#38bdf8">Post.</th>
+          <th style="color:#d4af6a">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Kepala &amp; Leher</td><td style="color:#d4af6a">4.5%</td><td style="color:#d4af6a">4.5%</td><td style="color:#d4af6a">9%</td></tr>
+        <tr><td>Trunk — dada / punggung atas</td><td style="color:#60a5fa">9%</td><td style="color:#38bdf8">9%</td><td style="color:#d4af6a">18%</td></tr>
+        <tr><td>Trunk — abdomen / punggung bawah</td><td style="color:#60a5fa">9%</td><td style="color:#38bdf8">9%</td><td style="color:#d4af6a">18%</td></tr>
+        <tr><td>Tiap lengan (seluruh)</td><td style="color:#34d399">4.5%</td><td style="color:#34d399">4.5%</td><td style="color:#d4af6a">9%</td></tr>
+        <tr><td>Tiap paha</td><td style="color:#a78bfa">4.5%</td><td style="color:#a78bfa">4.5%</td><td style="color:#d4af6a">9%</td></tr>
+        <tr><td>Tiap tungkai bawah + kaki</td><td style="color:#a78bfa">4.5%</td><td style="color:#a78bfa">4.5%</td><td style="color:#d4af6a">9%</td></tr>
+        <tr class="hl"><td style="font-weight:600;color:#a78bfa">↳ Tiap tungkai (keseluruhan)</td><td style="color:#a78bfa">9%</td><td style="color:#a78bfa">9%</td><td style="color:#a78bfa;font-size:.95rem">18%</td></tr>
+        <tr><td>Genitalia / Perineum</td><td style="color:#fb923c">1%</td><td style="color:#6b7e96">—</td><td style="color:#d4af6a">1%</td></tr>
+        <tr class="tr"><td>TOTAL</td><td>—</td><td>—</td><td>100%</td></tr>
+      </tbody>
+    </table>
+
+    <div class="nbox">
+      <strong>Catatan Dewasa:</strong>
+      <ul>
+        <li>Jangan hitung <strong>eritema / derajat I</strong> sebagai TBSA</li>
+        <li>Telapak tangan pasien (termasuk jari) ≈ <strong>1% TBSA</strong> — berguna untuk luka ireguler</li>
+        <li>Untuk akurasi lebih tinggi gunakan <strong>Lund-Browder Chart</strong></li>
+      </ul>
+    </div>
+  </div><!-- /adult tab -->
+
+  <!-- ══════════════ CHILD TAB ══════════════ -->
+  <div id="t-child" class="tcnt">
+
+    <div class="ibox">
+      ℹ️ <strong>Rule of Nines Anak:</strong> Kepala lebih besar secara proporsional, tungkai lebih kecil. Distribusi berubah seiring usia — nilai ini untuk anak <strong>usia ~1 tahun</strong>.
+    </div>
+
+    <!-- CHILD DIAGRAM PAIR -->
+    <div class="dg-wrap">
+
+      <!-- ANTERIOR CHILD -->
+      <div class="dg-col">
+        <svg viewBox="0 0 165 325" style="width:100%;display:block" role="img" aria-label="Tubuh anak tampak anterior">
+          <text x="82.5" y="13" text-anchor="middle" fill="#6b7e96" font-size="8.5" font-family="Outfit,sans-serif" font-weight="600" letter-spacing="1.5">DEPAN / ANTERIOR</text>
+
+          <!-- HEAD: BIGGER = 9% anterior -->
+          <ellipse cx="82.5" cy="46" rx="27" ry="31" fill="#1e2e46" stroke="#d4af6a" stroke-width="2"/>
+          <text x="82.5" y="49" text-anchor="middle" fill="#d4af6a" font-size="10" font-family="JetBrains Mono,monospace" font-weight="500">18%</text>
+          <text x="82.5" y="60" text-anchor="middle" fill="#d4af6a" font-size="6.5" font-family="Outfit,sans-serif" opacity=".7">kepala&amp;leher</text>
+
+          <!-- NECK -->
+          <rect x="75" y="77" width="15" height="8" rx="2" fill="#1e2e46" stroke="#d4af6a" stroke-width="1"/>
+
+          <!-- LEFT ARM ant 4.5% (same as adult) -->
+          <rect x="15" y="85" width="26" height="78" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="28" y="126" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- RIGHT ARM ant 4.5% -->
+          <rect x="124" y="85" width="26" height="78" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="137" y="126" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- CHEST ant 9% -->
+          <rect x="43" y="85" width="79" height="41" rx="3" fill="#0d2035" stroke="#60a5fa" stroke-width="1.5"/>
+          <text x="82.5" y="108" text-anchor="middle" fill="#60a5fa" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82.5" y="119" text-anchor="middle" fill="#60a5fa" font-size="6" font-family="Outfit,sans-serif" opacity=".7">dada anterior</text>
+
+          <!-- ABDOMEN ant 9% -->
+          <rect x="43" y="126" width="79" height="41" rx="3" fill="#0d2035" stroke="#60a5fa" stroke-width="1.5"/>
+          <text x="82.5" y="149" text-anchor="middle" fill="#60a5fa" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82.5" y="160" text-anchor="middle" fill="#60a5fa" font-size="6" font-family="Outfit,sans-serif" opacity=".7">abdomen anterior</text>
+
+          <!-- PERINEUM 1% -->
+          <text x="82.5" y="178" text-anchor="middle" fill="#fb923c" font-size="8" font-family="JetBrains Mono,monospace">1% ♦</text>
+
+          <!-- CHILD LEFT LEG (whole, 6.75% ant) -->
+          <rect x="43" y="182" width="35" height="124" rx="4" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.8"/>
+          <!-- mid line hint for paha/tungkai bawah -->
+          <line x1="43" y1="244" x2="78" y2="244" stroke="#a78bfa" stroke-width=".6" stroke-dasharray="4,3" opacity=".5"/>
+          <text x="60.5" y="242" text-anchor="middle" fill="#a78bfa" font-size="6" font-family="Outfit,sans-serif" opacity=".65">paha</text>
+          <text x="60.5" y="280" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">6.75%</text>
+          <text x="60.5" y="258" text-anchor="middle" fill="#a78bfa" font-size="6" font-family="Outfit,sans-serif" opacity=".65">t.bawah</text>
+
+          <!-- CHILD RIGHT LEG (whole, 6.75% ant) -->
+          <rect x="87" y="182" width="35" height="124" rx="4" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.8"/>
+          <line x1="87" y1="244" x2="122" y2="244" stroke="#a78bfa" stroke-width=".6" stroke-dasharray="4,3" opacity=".5"/>
+          <text x="104.5" y="280" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">6.75%</text>
+
+          <!-- Bracket child leg total ant -->
+          <line x1="140" y1="182" x2="146" y2="182" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="146" y1="182" x2="146" y2="306" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="140" y1="306" x2="146" y2="306" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <text x="154" y="230" text-anchor="middle" fill="#a78bfa" font-size="7" font-family="JetBrains Mono,monospace" writing-mode="vertical-rl" transform="translate(148,244) rotate(-90)">6.75% ant</text>
+        </svg>
+      </div>
+
+      <div class="dg-sep"><div class="dg-sep-line"></div></div>
+
+      <!-- POSTERIOR CHILD -->
+      <div class="dg-col">
+        <svg viewBox="0 0 165 325" style="width:100%;display:block" role="img" aria-label="Tubuh anak tampak posterior">
+          <text x="82.5" y="13" text-anchor="middle" fill="#6b7e96" font-size="8.5" font-family="Outfit,sans-serif" font-weight="600" letter-spacing="1.5">BELAKANG / POSTERIOR</text>
+
+          <!-- HEAD BACK: dashed -->
+          <ellipse cx="82.5" cy="46" rx="27" ry="31" fill="#161e2e" stroke="#7a6035" stroke-width="1.5" stroke-dasharray="5,3"/>
+          <text x="82.5" y="49" text-anchor="middle" fill="#7a6035" font-size="8.5" font-family="JetBrains Mono,monospace">(18%)*</text>
+          <text x="82.5" y="60" text-anchor="middle" fill="#7a6035" font-size="5.5" font-family="Outfit,sans-serif" opacity=".7">sudah dihitung</text>
+
+          <!-- NECK -->
+          <rect x="75" y="77" width="15" height="8" rx="2" fill="#161e2e" stroke="#7a6035" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <!-- LEFT ARM post 4.5% -->
+          <rect x="15" y="85" width="26" height="78" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="28" y="126" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- RIGHT ARM post 4.5% -->
+          <rect x="124" y="85" width="26" height="78" rx="5" fill="#0c1d2c" stroke="#34d399" stroke-width="1.5"/>
+          <text x="137" y="126" text-anchor="middle" fill="#34d399" font-size="8.5" font-family="JetBrains Mono,monospace">4.5%</text>
+
+          <!-- UPPER BACK 9% -->
+          <rect x="43" y="85" width="79" height="41" rx="3" fill="#0c1e35" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="82.5" y="108" text-anchor="middle" fill="#38bdf8" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82.5" y="119" text-anchor="middle" fill="#38bdf8" font-size="6" font-family="Outfit,sans-serif" opacity=".7">punggung atas</text>
+
+          <!-- LOWER BACK 9% -->
+          <rect x="43" y="126" width="79" height="41" rx="3" fill="#0c1e35" stroke="#38bdf8" stroke-width="1.5"/>
+          <text x="82.5" y="149" text-anchor="middle" fill="#38bdf8" font-size="9.5" font-family="JetBrains Mono,monospace" font-weight="500">9%</text>
+          <text x="82.5" y="160" text-anchor="middle" fill="#38bdf8" font-size="6" font-family="Outfit,sans-serif" opacity=".7">punggung bawah</text>
+
+          <!-- CHILD LEFT LEG post 6.75% -->
+          <rect x="43" y="182" width="35" height="124" rx="4" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.8"/>
+          <line x1="43" y1="244" x2="78" y2="244" stroke="#a78bfa" stroke-width=".6" stroke-dasharray="4,3" opacity=".5"/>
+          <text x="60.5" y="280" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">6.75%</text>
+
+          <!-- CHILD RIGHT LEG post 6.75% -->
+          <rect x="87" y="182" width="35" height="124" rx="4" fill="#0c1d2c" stroke="#a78bfa" stroke-width="1.8"/>
+          <line x1="87" y1="244" x2="122" y2="244" stroke="#a78bfa" stroke-width=".6" stroke-dasharray="4,3" opacity=".5"/>
+          <text x="104.5" y="280" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="JetBrains Mono,monospace">6.75%</text>
+
+          <!-- Bracket -->
+          <line x1="140" y1="182" x2="146" y2="182" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="146" y1="182" x2="146" y2="306" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <line x1="140" y1="306" x2="146" y2="306" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+          <text x="154" y="230" text-anchor="middle" fill="#a78bfa" font-size="7" font-family="JetBrains Mono,monospace" writing-mode="vertical-rl" transform="translate(148,244) rotate(-90)">6.75% post</text>
+
+          <text x="82.5" y="317" text-anchor="middle" fill="#6b7e96" font-size="6.5" font-family="Outfit,sans-serif">*kepala dihitung 1× dari anterior</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- KEY: leg annotation child -->
+    <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:8px;padding:.6rem .9rem;margin-bottom:1rem;font-size:.74rem;color:#a78bfa;text-align:center;line-height:1.7">
+      <strong>Tiap tungkai anak = 6.75% anterior + 6.75% posterior = 13.5% total</strong><br>
+      <span style="font-size:.68rem;opacity:.8">vs dewasa (18%) — lebih kecil karena proporsi kepala lebih besar</span>
+    </div>
+
+    <!-- CHILD TOTALS GRID -->
+    <p style="font-size:.63rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#d4af6a;margin-bottom:.55rem">Ringkasan Total — Anak</p>
+    <div class="tot-grid" style="margin-bottom:1rem">
+      <div class="tot-cell hi" style="border-color:rgba(212,175,106,.5);border-width:2px">
+        <div class="tot-lbl">Kepala ⚠️</div>
+        <div class="tot-val" style="color:#d4af6a">18%</div>
+        <div class="tot-sub" style="color:#fbbf24">vs 9% dewasa</div>
+      </div>
+      <div class="tot-cell">
+        <div class="tot-lbl">Tiap Lengan</div>
+        <div class="tot-val" style="color:#34d399">9%</div>
+        <div class="tot-sub">= dewasa</div>
+      </div>
+      <div class="tot-cell">
+        <div class="tot-lbl">Trunk Ant</div>
+        <div class="tot-val" style="color:#60a5fa">18%</div>
+        <div class="tot-sub">= dewasa</div>
+      </div>
+      <div class="tot-cell">
+        <div class="tot-lbl">Trunk Post</div>
+        <div class="tot-val" style="color:#38bdf8">18%</div>
+        <div class="tot-sub">= dewasa</div>
+      </div>
+      <div class="tot-cell span2 hi" style="border-color:rgba(167,139,250,.4);border-width:2px">
+        <div class="tot-lbl">Tiap Tungkai ⚠️</div>
+        <div class="tot-val" style="color:#a78bfa;font-size:1rem">13.5%</div>
+        <div class="tot-sub" style="color:#fbbf24;opacity:.9">6.75 ant + 6.75 post &nbsp;|&nbsp; vs 18% dewasa</div>
+      </div>
+      <div class="tot-cell" style="border-color:rgba(251,146,60,.3)">
+        <div class="tot-lbl">Genitalia</div>
+        <div class="tot-val" style="color:#fb923c">1%</div>
+      </div>
+      <div class="tot-cell accent">
+        <div class="tot-lbl">TOTAL</div>
+        <div class="tot-val" style="color:#d4af6a">100%</div>
+      </div>
+    </div>
+
+    <!-- CHILD TABLE with comparison -->
+    <table class="rtbl">
+      <thead>
+        <tr>
+          <th>Area Tubuh</th>
+          <th style="color:#60a5fa">Ant.</th>
+          <th style="color:#38bdf8">Post.</th>
+          <th style="color:#d4af6a">Total</th>
+          <th style="color:#6b7e96">vs Dewasa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:rgba(212,175,106,.04)">
+          <td style="font-weight:600">Kepala &amp; Leher</td>
+          <td style="color:#d4af6a">9%</td><td style="color:#d4af6a">9%</td>
+          <td style="color:#d4af6a;font-weight:700">18%</td>
+          <td class="diff-up">↑ +9%</td>
+        </tr>
+        <tr>
+          <td>Trunk — dada / punggung atas</td>
+          <td style="color:#60a5fa">9%</td><td style="color:#38bdf8">9%</td>
+          <td style="color:#d4af6a">18%</td>
+          <td class="diff-eq">= sama</td>
+        </tr>
+        <tr>
+          <td>Trunk — abdomen / punggung bawah</td>
+          <td style="color:#60a5fa">9%</td><td style="color:#38bdf8">9%</td>
+          <td style="color:#d4af6a">18%</td>
+          <td class="diff-eq">= sama</td>
+        </tr>
+        <tr>
+          <td>Tiap lengan (seluruh)</td>
+          <td style="color:#34d399">4.5%</td><td style="color:#34d399">4.5%</td>
+          <td style="color:#d4af6a">9%</td>
+          <td class="diff-eq">= sama</td>
+        </tr>
+        <tr class="hl">
+          <td style="font-weight:600">Tiap tungkai (keseluruhan)</td>
+          <td style="color:#a78bfa">6.75%</td><td style="color:#a78bfa">6.75%</td>
+          <td style="color:#a78bfa;font-weight:700">13.5%</td>
+          <td class="diff-dn">↓ −4.5%</td>
+        </tr>
+        <tr>
+          <td>Genitalia / Perineum</td>
+          <td style="color:#fb923c">1%</td><td style="color:#6b7e96">—</td>
+          <td style="color:#d4af6a">1%</td>
+          <td class="diff-eq">= sama</td>
+        </tr>
+        <tr class="tr">
+          <td>TOTAL</td><td>—</td><td>—</td><td>100%</td><td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="nbox">
+      <strong>Catatan Anak:</strong>
+      <ul>
+        <li>Nilai di atas untuk anak <strong>usia ~1 tahun</strong>. Setiap pertambahan usia: kepala <strong>−1%</strong>, tiap tungkai <strong>+0.5%</strong></li>
+        <li>Gunakan <strong>Lund-Browder Chart</strong> untuk estimasi yang disesuaikan usia secara akurat</li>
+        <li>Pada anak, tambahkan <strong>cairan maintenance (glukosa 5%)</strong> di luar kalkulasi Parkland</li>
+        <li>Jangan hitung eritema (derajat I) sebagai bagian TBSA</li>
+      </ul>
+    </div>
+  </div><!-- /child tab -->
+
+</div><!-- /modal inner -->
+</div><!-- /modal overlay -->
+
+<script>
+// ═══════════════════════════════════
+//  STATE
+// ═══════════════════════════════════
+let mult = 4;
+const MG = {
+  4:'Parkland klasik (ABA / ATLS — standar dewasa, luka bakar termal)',
+  3:'Modified Parkland (luka kimia / inhalasi / pertimbangan khusus)',
+  2:'Formula Brooke modifikasi (anak / luka bakar listrik / titrasi konservatif)'
+};
+
+function setM(m,btn){
+  mult=m;
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('mg').textContent=MG[m];
+  upd();
+}
+
+// ═══════════════════════════════════
+//  CALCULATE
+// ═══════════════════════════════════
+function calc(){
+  const ws=document.getElementById('wt').value.trim();
+  const ts=document.getElementById('tbsa').value.trim();
+  const inj=document.getElementById('inj').value;
+  const iv=document.getElementById('ivt').value;
+  if(!ws&&!ts) return null;
+
+  const w=parseFloat(ws), t=parseFloat(ts);
+  const err=[], warn=[];
+
+  if(ws&&(isNaN(w)||w<=0||w>350)) err.push('Berat badan tidak valid — masukkan nilai antara 1–350 kg');
+  if(ts&&(isNaN(t)||t<=0)) err.push('TBSA harus lebih dari 0%');
+  if(ts&&!isNaN(t)&&t>100) err.push('TBSA tidak dapat melebihi 100%');
+  if(err.length||!ws||!ts||isNaN(w)||isNaN(t)) return{valid:false,err,warn};
+
+  if(t>50) warn.push('TBSA >50%: Risiko fluid creep signifikan. Monitor urine output ketat dan pertimbangkan titrasi konservatif.');
+  else if(t>40) warn.push('TBSA 40–50%: Pantau tanda overload cairan. Waspadai abdominal compartment syndrome.');
+  if(t<15) warn.push('TBSA <15%: Pertimbangkan kembali indikasi resusitasi IV agresif pada luka bakar minor.');
+  if(w<10) warn.push('Berat badan <10 kg: Kemungkinan pasien anak. Gunakan formula pediatri dan konsultasikan ke spesialis.');
+
+  const total=mult*w*t, half=total/2;
+  let rem=8,del=0,tv=false,exc=false;
+
+  if(inj&&iv){
+    const[ih,im]=inj.split(':').map(Number);
+    const[vh,vm]=iv.split(':').map(Number);
+    let A=ih*60+im, B=vh*60+vm;
+    if(B<A) B+=1440;
+    del=(B-A)/60;
+    if(del<0){err.push('Waktu akses IV tidak dapat sebelum waktu cedera');return{valid:false,err,warn};}
+    rem=Math.max(0,8-del); tv=true; exc=del>=8;
+    if(exc) warn.push('Jendela 8 jam pertama TERLAMPAUI. Konsultasi segera dengan spesialis luka bakar.');
+    else if(del>4) warn.push('Keterlambatan '+del.toFixed(1)+' jam — laju infus 8 jam pertama meningkat signifikan. Waspadai risiko overload akut.');
+  }
+
+  const rF=rem>0?Math.round(half/rem):null;
+  const rN=Math.round(half/16);
+  const bp=Math.min(100,(del/8)*100);
+  const bc=exc?'#f87171':del>4?'#fbbf24':'#d4af6a';
+
+  return{
+    valid:true,err:[],warn,
+    total:Math.round(total),totL:(total/1000).toFixed(2),
+    f8h:Math.round(half),n16h:Math.round(half),
+    rF,rN,rem:Math.round(rem*10)/10,del:Math.round(del*10)/10,
+    tv,exc,bp,bc,w,t,m:mult
+  };
+}
+
+// ═══════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════
+function rc(r){return r===null?'':r>750?'rd':r>500?'rw':'rn'}
+function f(n){return n.toLocaleString('id-ID')}
+
+// ═══════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════
+function upd(){
+  const c=calc();
+  const col=document.getElementById('rcol');
+
+  if(!c){
+    col.innerHTML='<div class="ph"><div style="font-size:2.8rem;opacity:.3">💧</div><p>Masukkan <strong style="color:#e8dcc8">berat badan</strong> dan <strong style="color:#e8dcc8">persentase TBSA</strong> untuk memulai kalkulasi resusitasi</p></div>';
+    return;
+  }
+
+  let h='<div class="fade">';
+  c.err.forEach(e=>{h+=`<div class="aerr">❌&nbsp; ${e}</div>`;});
+  c.warn.forEach(w=>{h+=`<div class="awarn">⚠️&nbsp; ${w}</div>`;});
+
+  if(!c.valid){h+='</div>';col.innerHTML=h;return;}
+
+  // Total
+  h+=`<div class="r-total">
+    <p class="r-total-lbl">Total Cairan 24 Jam</p>
+    <p class="r-total-val">${f(c.total)} <span style="font-size:.5em;opacity:.75">mL</span></p>
+    <p class="r-total-lit">${c.totL} Liter</p>
+    <div class="r-div"></div>
+    <p class="r-fml">${c.m} mL &times; ${c.w} kg &times; ${c.t}% TBSA</p>
+  </div>`;
+
+  // Split
+  const fd=c.rF!==null?f(c.rF):f(Math.round(c.f8h/8));
+  const fn=c.tv?(c.exc?'<span style="color:#f87171">⚠️ Jendela terlampaui</span>':`Sisa ${c.rem} jam`):'Dari waktu cedera (8 jam)';
+  h+=`<div class="split-grid">
+    <div class="sc s1">
+      <p class="sc-lbl s1">8 Jam Pertama</p>
+      <p class="sc-vol">${f(c.f8h)}<span>mL</span></p>
+      <p class="sc-rate ${rc(c.rF)}">${fd} mL/jam</p>
+      <p class="sc-note">${fn}</p>
+    </div>
+    <div class="sc s2">
+      <p class="sc-lbl s2">16 Jam Berikutnya</p>
+      <p class="sc-vol">${f(c.n16h)}<span>mL</span></p>
+      <p class="sc-rate ${rc(c.rN)}">${f(c.rN)} mL/jam</p>
+      <p class="sc-note">Jam ke-8 s/d jam ke-24</p>
+    </div>
+  </div>`;
+
+  // Rate legend
+  h+=`<div class="r-leg">
+    <span><span class="rdot" style="background:#34d399"></span>&lt; 500 mL/jam</span>
+    <span><span class="rdot" style="background:#fbbf24"></span>500–750 mL/jam</span>
+    <span><span class="rdot" style="background:#f87171"></span>&gt; 750 mL/jam</span>
+  </div>`;
+
+  // Time bar
+  if(c.tv){
+    const st=c.exc?'<span style="color:#f87171">TERLAMPAUI ⚠️</span>':`<span style="color:${c.bc};font-family:'JetBrains Mono',monospace">+${c.del}j keterlambatan</span>`;
+    h+=`<div class="tbar">
+      <div class="tbar-hdr"><span class="tbar-lbl">Jendela 8 Jam Pertama</span><span class="tbar-st">${st}</span></div>
+      <div class="ttrack"><div class="tfill" style="width:${c.bp}%;background:${c.bc}"></div></div>
+      <div class="tticks"><span>T₀ Cedera</span><span>T+4 jam</span><span>T+8 jam</span></div>
+    </div>`;
+  }
+
+  // Formula
+  const rf1=c.rF!==null?`<span class="${rc(c.rF)}"> @ ${f(c.rF)} mL/jam</span>`:'';
+  h+=`<div class="fbox">
+    <p class="fbox-lbl">Rincian Kalkulasi</p>
+    <div class="flines">
+      <div>Total = ${c.m} &times; ${c.w} &times; ${c.t} = <span style="color:#d4af6a;font-weight:500">${f(c.total)} mL</span></div>
+      <div>50% (8 jam) = <span style="color:#d4af6a">${f(c.f8h)} mL</span>${rf1}</div>
+      <div>50% (16 jam) = <span style="color:#60a5fa">${f(c.n16h)} mL</span><span class="${rc(c.rN)}"> @ ${f(c.rN)} mL/jam</span></div>
+    </div>
+  </div>`;
+
+  h+='</div>';
+  col.innerHTML=h;
+}
+
+// ═══════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════
+function openM(){
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeM(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function swTab(tab,btn){
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.tcnt').forEach(c=>c.classList.remove('on'));
+  document.getElementById('t-'+tab).classList.add('on');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+</script>
+</body>
+</html>
